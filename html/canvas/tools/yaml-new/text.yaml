@@ -1173,13 +1173,19 @@
   variants: *load-font-variant-definition
 
 - name: 2d.text.measure.selection-rects.tentative
-  desc: Check that TextMetrics::getSelectionRects() matches its DOM equivalent.
+  desc: >-
+    Check that TextMetrics::getSelectionRects() matches its DOM equivalent, with
+    direction {{ text_direction }}, text align {{ text_align }}, and
+    {{ letter_spacing }} letter spacing.
   canvas_types: ['HtmlCanvas', 'OffscreenCanvas']
   code: |
     function placeAndSelectTextInDOM(text, from, to) {
       const el = document.createElement("div");
       el.innerHTML = text;
       el.style.font = '50px sans-serif';
+      el.style.direction = '{{ text_direction }}';
+      el.style.textAlign = '{{ text_align }}';
+      el.style.letterSpacing = '{{ letter_spacing }}';
       document.body.appendChild(el);
 
       let range = document.createRange();
@@ -1199,8 +1205,21 @@
 
       document.body.removeChild(el);
 
+      // Offset to the alignment point determined by textAlign.
+      let text_align_dx;
+      switch (el.style.textAlign) {
+        case 'right':
+          text_align_dx = parent.width;
+          break;
+        case 'center':
+          text_align_dx = parent.width / 2;
+          break;
+        default:
+          text_align_dx = 0;
+      }
+
       for(let i = 0 ; i < sel_rects.length ; ++i) {
-        sel_rects[i].x -= parent.x;
+        sel_rects[i].x -= parent.x + text_align_dx;
         sel_rects[i].y -= parent.y;
       }
 
@@ -1219,6 +1238,9 @@
     }
 
     ctx.font = '50px sans-serif';
+    ctx.direction = '{{ text_direction }}';
+    ctx.textAlign = '{{ text_align }}';
+    ctx.letterSpacing = '{{ letter_spacing }}';
 
     const kTexts = [
       'UNAVAILABLE',
@@ -1258,6 +1280,22 @@
         placeAndSelectTextInDOM(text, 1, 0)
       );
     }
+  variants_layout: [single_file, single_file, single_file]
+  variants:
+  - direction-ltr:
+      text_direction: ltr
+    direction-rtl:
+      text_direction: rtr
+  - align-left:
+      text_align: left
+    align-center:
+      text_align: center
+    align-right:
+      text_align: right
+  - no-spacing:
+      letter_spacing: 0px
+    spacing:
+      letter_spacing: 10px
 
 - name: 2d.text.measure.selection-rects-baselines.tentative
   desc: >-

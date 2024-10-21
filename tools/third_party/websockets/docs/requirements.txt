@@ -6,3 +6,4 @@ sphinx-inline-tabs
 sphinxcontrib-spelling
 sphinxcontrib-trio
 sphinxext-opengraph
+pillow>=10.2.0 # not directly required, pinned by Snyk to avoid a vulnerability
